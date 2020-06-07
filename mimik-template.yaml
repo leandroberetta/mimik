@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: mimik-template
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: ${APP_NAME}
+      version: ${APP_VERSION}
+    name: ${APP_NAME}-${APP_VERSION}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: ${APP_NAME}
+        version: ${APP_VERSION}
+    strategy:
+      type: RollingUpdate
+    template:
+      metadata:
+        labels:
+          app: ${APP_NAME}
+          version: ${APP_VERSION}
+      spec:
+        volumes:
+        - name: pod-info
+          downwardAPI:
+            items:    
+            - fieldRef:
+                fieldPath: metadata.labels
+              path: pod_labels      
+        containers:
+        - image: quay.io/leandroberetta/mimik:latest        
+          imagePullPolicy: Always
+          name: ${APP_NAME}
+          env:
+          - name: MIMIK_TYPE
+            value: ${MIMIK_TYPE}
+          - name: MIMIK_DESTINATION
+            value: ${MIMIK_DESTINATION}
+          volumeMounts:
+          - name: pod-info
+            mountPath: /tmp/etc
+          ports:
+          - containerPort: 5000
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 200m
+            requests:
+              memory: 256Mi
+              cpu: 200m
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    ports:
+    - port: 5000
+      protocol: TCP
+    selector:
+      app: ${APP_NAME}
+parameters:
+- description: Application Name
+  displayName: Application Name
+  name: APP_NAME
+  required: true
+  value: mimik
+- description: Application Version
+  displayName: Application Version
+  name: APP_VERSION
+  required: true
+  value: v1
+- description: Mimik Type
+  displayName: Mimik Type
+  name: MIMIK_TYPE
+  required: true
+  value: edge
+- description: Mimik Destination
+  displayName: Mimik Destination
+  name: MIMIK_DESTINATION
+  required: true
+  value: http://dev/null
