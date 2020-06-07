@@ -18,8 +18,10 @@ objects:
         version: ${APP_VERSION}
     strategy:
       type: RollingUpdate
-    template:
+    template:      
       metadata:
+        annotations:
+          sidecar.istio.io/inject: "true"
         labels:
           app: ${APP_NAME}
           version: ${APP_VERSION}
@@ -62,6 +64,7 @@ objects:
     ports:
     - port: 5000
       protocol: TCP
+      name: http
     selector:
       app: ${APP_NAME}
 parameters:

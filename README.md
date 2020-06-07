@@ -15,6 +15,12 @@ Mimik can be instance many times with difference parameters thanks to an OpenShi
 
 ## Demonstration
 
+The goal is to deploy some mimik services to achieve the following topology:
+
+![Mesh](mesh.png)
+
+**Note**: This demonstration assumes that Istio is already installed in **istio-system** namespace.
+
 Create the following resources in an OpenShift cluster:
 
     oc create namespace musik
@@ -48,13 +54,9 @@ Create the following resources in an OpenShift cluster:
         -p APP_VERSION=v1 \
         -p MIMIK_TYPE=edge | oc apply -f - -n musik                
 
-    oc expose svc page -n musik
+    oc apply -f istio.yaml
 
 Then test the call to the first application (the page):
 
-    curl $(oc get route page -o jsonpath='{.spec.host}' -n musik)/page
-    page ("v1") -> albums ("v1") -> songs ("v1") -> lyrics ("v1")
-
-    curl $(oc get route page -o jsonpath='{.spec.host}' -n musik)/page
-    page ("v1") -> albums ("v1") -> songs ("v2") -> lyrics ("v1")
-    
+    curl $(oc get route musik -o jsonpath='{.spec.host}' -n istio-system)/page
+    page ("v1") -> albums ("v1") -> songs ("v1") -> lyrics ("v1")    
