@@ -42,6 +42,8 @@ objects:
             value: ${MIMIK_TYPE}
           - name: MIMIK_DESTINATION
             value: ${MIMIK_DESTINATION}
+          - name: MIMIK_SIMULATE_ERROR
+            value: ${MIMIK_SIMULATE_ERROR}
           volumeMounts:
           - name: pod-info
             mountPath: /tmp/etc
@@ -88,3 +90,8 @@ parameters:
   name: MIMIK_DESTINATION
   required: true
   value: http://dev/null
+- description: Mimik Simulate Error (500)
+  displayName: Mimik Simulate Error (500)
+  name: MIMIK_SIMULATE_ERROR
+  required: true
+  value: "false"

@@ -12,6 +12,7 @@ Mimik can be instance many times with difference parameters thanks to an OpenShi
 * **APP_VERSION**: Application version
 * **MIMIK_TYPE**: *passthrough* to continue the chain calling another service or *edge* to end it
 * **MIMIK_DESTINATION**: The next service's URL to call to
+* **MIMIK_SIMULATE_ERROR**: Return a 500 error
 
 ## Demonstration
 
@@ -28,7 +29,7 @@ Create the following resources in an OpenShift cluster:
     oc process -f mimik-template.yaml -n musik \
         -p APP_NAME=page \
         -p APP_VERSION=v1 \
-        -p MIMIK_TYPE=passthrough \
+        -p MIMIK_TYPE=passthrough \        
         -p MIMIK_DESTINATION=http://albums:5000/albums | oc apply -f - -n musik
 
     oc process -f mimik-template.yaml -n musik \

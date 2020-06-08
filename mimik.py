@@ -10,7 +10,8 @@ def get(path): # pragma: no cover
     return mimik(path, 
                  request.headers, 
                  os.environ.get("MIMIK_TYPE"), 
-                 os.environ.get("MIMIK_DESTINATION"))    
+                 os.environ.get("MIMIK_DESTINATION"),
+                 os.environ.get("MIMIK_SIMULATE_ERROR"))    
 
 def do_history(past, present):    
     if past is None:      
@@ -32,14 +33,17 @@ def get_version():
     except:
         return "v1"
 
-def mimik(path, headers, type, destination):
+def mimik(path, headers, type, destination, error):
+    if error == 'true':
+        return 'Error', 503
+
     past = headers.get("mimik-history")
     present = '{} ({})'.format(path, get_version())
 
     history = do_history(past, present)
     
     if type != "edge":        
-        response = requests.get(destination, headers={"mimik-history": history})
+        response = requests.get(destination, headers={"mimik-history": history, "Authorization": headers.get("Authorization")})
 
         return response.content
 
