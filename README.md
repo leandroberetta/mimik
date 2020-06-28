@@ -27,8 +27,6 @@ The goal is to deploy some mimik services to achieve the following topology:
 
 ![Mesh](mesh.png)
 
-**Note**: This demonstration assumes that Istio is already installed in **istio-system** namespace.
-
 Create the following resources in an OpenShift cluster:
 
     oc create namespace musik
@@ -49,20 +47,20 @@ Create the following resources in an OpenShift cluster:
         -p APP_NAME=songs \
         -p APP_VERSION=v1 \
         -p MIMIK_TYPE=passthrough \
-        -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik        
+        -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik
 
     oc process -f mimik-template.yaml -n musik \
         -p APP_NAME=songs \
         -p APP_VERSION=v2 \
         -p MIMIK_TYPE=passthrough \
-        -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik                
+        -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik
 
     oc process -f mimik-template.yaml -n musik \
         -p APP_NAME=lyrics \
         -p APP_VERSION=v1 \
-        -p MIMIK_TYPE=edge | oc apply -f - -n musik                
+        -p MIMIK_TYPE=edge | oc apply -f - -n musik
 
-    oc apply -f istio.yaml
+    oc apply -f istio.yaml -n musik
 
 Then test the call to the first application (the page):
 
