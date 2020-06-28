@@ -1,8 +1,15 @@
 # Mimik
 
-Simple application used to simulate being a microservice (or simulate many) in a chain. Helpful to test OpenShift Service Mesh (Istio) features.
+Simple application to simulate being a microservice in a chain. 
 
-Mimik can be instance many times with difference parameters thanks to an OpenShift template.
+Helpful to test OpenShift Service Mesh (Istio) features like:
+
+* **Traffic Routing**: Allows to set different service versions (v1, v2) to try different routing configurations
+* **Tracing**: Propagates the needed tracing headers
+* **Circuit Breakers**: Returns a HTTP 503 error in any part of the chain
+* **JWT**: Propagates the authentication header through services)
+
+Mimik can be instanced many times with different parameters each time thanks to an included OpenShift template.
 
 ## Usage
 
@@ -12,7 +19,7 @@ Mimik can be instance many times with difference parameters thanks to an OpenShi
 * **APP_VERSION**: Application version
 * **MIMIK_TYPE**: *passthrough* to continue the chain calling another service or *edge* to end it
 * **MIMIK_DESTINATION**: The next service's URL to call to
-* **MIMIK_SIMULATE_ERROR**: Return a 500 error
+* **MIMIK_SIMULATE_ERROR**: Return a 503 error
 
 ## Demonstration
 
@@ -29,7 +36,7 @@ Create the following resources in an OpenShift cluster:
     oc process -f mimik-template.yaml -n musik \
         -p APP_NAME=page \
         -p APP_VERSION=v1 \
-        -p MIMIK_TYPE=passthrough \        
+        -p MIMIK_TYPE=passthrough \
         -p MIMIK_DESTINATION=http://albums:5000/albums | oc apply -f - -n musik
 
     oc process -f mimik-template.yaml -n musik \
@@ -59,5 +66,5 @@ Create the following resources in an OpenShift cluster:
 
 Then test the call to the first application (the page):
 
-    curl $(oc get route musik -o jsonpath='{.spec.host}' -n istio-system)/page
-    page ("v1") -> albums ("v1") -> songs ("v1") -> lyrics ("v1")    
+    curl $(oc get route istio-ingressgateway -o jsonpath='{.spec.host}' -n istio-system)/page
+    page ("v1") -> albums ("v1") -> songs ("v2") -> lyrics ("v1")
