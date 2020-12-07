@@ -1,6 +1,6 @@
 # Mimik
 
-Simple application to simulate being a service in a mesh. 
+Simple application to simulate a service (or many) in a mesh deployed in Kubernetes. Helpful to test Istio features like traffic routing, tracing, security and more. 
 
 ## Usage
 
@@ -14,11 +14,12 @@ The following environment variables are needed to create a Mimik instance:
 | - | - |
 | MIMIK_SERVICE_NAME | The instance name |
 | MIMIK_SERVICE_PORT | The instance port |
-| MIMIK_ENDPOINTS_FILE | The file with the endpoints configuration and they connections to upstream services |
+| MIMIK_ENDPOINTS_FILE | A file containing the endpoints configuration and they connections to upstream services |
+| MIMIK_LABELS_FILE | A file containing labels, Mimik looks for the version label specifically in the file, if the file does not exists or does not have the version label, the default is v1 |
 
 ### Endpoints
 
-The following file describes the endpoints that a Mimik instances listens to and the connections it has to other upstream services:
+The following file describes the endpoints that a Mimik instance listens to and the connections it has to other upstream services:
 
 ```json
 [
