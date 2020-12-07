@@ -2,70 +2,72 @@
 
 Simple application to simulate being a microservice in a chain. 
 
-Helpful to test OpenShift Service Mesh (Istio) features like:
-
-* **Traffic Routing**: Allows to set different service versions (v1, v2) to try different routing configurations
-* **Tracing**: Propagates the needed HTTP headers for tracing
-* **Circuit Breakers**: Returns a configurable HTTP 503 error in any part of the chain
-* **JWT**: Propagates the authentication header through services)
-
-Mimik can be instanced many times with different parameters each time thanks to an included OpenShift template.
-
 ## Usage
 
-### Template Parameters
+Any Mimik instance needs to have the following configuration:
 
-* **APP_NAME**: Application name
-* **APP_VERSION**: Application version
-* **MIMIK_TYPE**: *passthrough* to continue the chain calling another service or *edge* to end it
-* **MIMIK_DESTINATION**: The next service's URL to call to
-* **MIMIK_SIMULATE_ERROR**: "true" to return a 503 error
+### Environment Variables
 
-## Demonstration
+The following environment variables are needed to create a Mimik instance:
 
-The goal is to deploy some mimik services to achieve the following topology:
+| Variable | Description |
+| - | - |
+| MIMIK_SERVICE_NAME | The instance name |
+| MIMIK_SERVICE_PORT | The instance port |
+| MIMIK_ENDPOINTS_FILE | The file with the endpoints configuration and they connections to upstream services |
 
-![Mesh](mesh.png)
+### Endpoints
 
-Create the following resources in an OpenShift cluster:
+The following file describes the endpoints that a Mimik instances listens to and the connections it has to other upstream services:
 
-```bash
-oc create namespace musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=page \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://albums:5000/albums | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=albums \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://songs:5000/songs | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=songs \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=songs \
-    -p APP_VERSION=v2 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=lyrics \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=edge | oc apply -f - -n musik
-
-oc apply -f istio.yaml -n musik
+```json
+[
+    {
+        "name": "Get songs",
+        "path": "/",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "songs-service",
+                "port": "8080",
+                "path": "songs",
+                "method": "GET"
+            }
+        ]
+    },
+    {
+        "name": "Get song with id 1",
+        "path": "/songs/1",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "songs-service",
+                "port": "8080",
+                "path": "songs/1",
+                "method": "GET"
+            },
+            {
+                "name": "hits-service",
+                "port": "8080",
+                "path": "hits/1",
+                "method": "POST"
+            }
+        ]
+    },
+    {
+        "name": "Health",
+        "path": "/health",
+        "method": "GET",
+        "connections": []
+    }
+]
 ```
 
-Then, test the call to the first application (the page):
+## Example
+
+The health request from above, doesn't have any connections and its response looks like:
 
 ```bash
-curl $(oc get route istio-ingressgateway -o jsonpath='{.spec.host}' -n istio-system)/page
-````
+curl http://localhost:8080/health
+{"name":"lyrics-page","version":"v1","path":"/health","statusCode":200,"upstreamResponse":[]}
+```
