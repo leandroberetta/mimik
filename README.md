@@ -1,6 +1,6 @@
 # Mimik
 
-Simple application to simulate being a microservice in a chain. 
+Simple application to simulate being a microservice in a mesh. 
 
 ## Usage
 
