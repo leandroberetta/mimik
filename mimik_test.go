@@ -20,8 +20,16 @@ func TestMakeValidURL(t *testing.T) {
 	}
 }
 
+func TestGetVersion(t *testing.T) {
+	expected := "v2"
+
+	if got := getVersion("mimik_labels.txt"); got != expected {
+		t.Errorf("Wrong version: Expected %s - Got %s", expected, got)
+	}
+}
+
 func TestEndpointHandler(t *testing.T) {
-	service, _ := NewService("lyrics", "8080", "mimik_test.json")
+	service, _ := NewService("lyrics", "8080", "mimik_test.json", "mimik_labels.txt")
 
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
@@ -50,7 +58,7 @@ func TestNewService(t *testing.T) {
 	expectedServiceName := "lyrics"
 	expectedServicePort := "8080"
 
-	service, _ := NewService(expectedServiceName, expectedServicePort, "mimik_test.json")
+	service, _ := NewService(expectedServiceName, expectedServicePort, "mimik_test.json", "mimik_labels.txt")
 
 	if gotServiceName := service.Name; gotServiceName != expectedServiceName {
 		t.Errorf("Wrong service name: Expected %s - Got %s", expectedServiceName, gotServiceName)

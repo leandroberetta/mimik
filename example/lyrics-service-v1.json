@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Get lyrics with id 1",
+        "path": "/lyrics/1",
+        "method": "GET",
+        "connections": []
+    },
+    {
+        "name": "Health",
+        "path": "/health",
+        "method": "GET",
+        "connections": []
+    }
+]

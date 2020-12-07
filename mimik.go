@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type Endpoint struct {
@@ -45,26 +47,41 @@ func main() {
 	service, _ := NewService(
 		os.Getenv("MIMIK_SERVICE_NAME"),
 		os.Getenv("MIMIK_SERVICE_PORT"),
-		os.Getenv("MIMIK_ENDPOINTS_FILE"))
+		os.Getenv("MIMIK_ENDPOINTS_FILE"),
+		getVersion(os.Getenv("MIMIK_LABELS_FILE")))
 	client := &http.Client{}
 	http.HandleFunc("/", endpointHandler(service, client))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", service.Port), nil))
 }
 
-func NewService(name, port, fileName string) (Service, error) {
+func getVersion(fileName string) string {
+	version := "v1"
+	labelsFile, err := os.Open(fileName)
+	if err != nil {
+		return version
+	}
+	defer labelsFile.Close()
+	scanner := bufio.NewScanner(labelsFile)
+	for scanner.Scan() {
+		values := strings.Split(scanner.Text(), "=")
+		if values[0] == "version" {
+			version = values[1]
+		}
+	}
+	return version
+}
+
+func NewService(name, port, fileName, version string) (Service, error) {
 	service := Service{Name: name, Port: port}
 	err := loadEndpoints(fileName, &service.Endpoints)
-
 	return service, err
 }
 
 func loadEndpoints(fileName string, endpoints *[]Endpoint) error {
 	file, err := os.Open(fileName)
 	defer file.Close()
-
 	bytes, err := ioutil.ReadAll(file)
 	err = json.Unmarshal(bytes, endpoints)
-
 	return err
 }
 
@@ -76,21 +93,16 @@ func endpointHandler(service Service, client HTTPClient) http.HandlerFunc {
 			response.Path = r.URL.Path
 			if endpoint.Path == r.URL.Path {
 				response.StatusCode = http.StatusOK
-
 				upstreamResponse := make([]Response, len(endpoint.Connections))
-
 				for _, connection := range endpoint.Connections {
 					go handleReq(makeURL(connection), connection.Method, client, ch)
 				}
-
 				for i, _ := range endpoint.Connections {
 					upstreamResponse[i] = <-ch
 				}
-
 				response.UpstreamResponse = upstreamResponse
 			}
 		}
-
 		responseJSON, _ := json.Marshal(response)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(responseJSON)
@@ -109,15 +121,12 @@ func handleReq(url, method string, client HTTPClient, ch chan Response) {
 		return
 	}
 	defer resp.Body.Close()
-
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		ch <- Response{StatusCode: http.StatusServiceUnavailable}
 		return
 	}
-
 	response := Response{}
 	err = json.Unmarshal(bytes, &response)
-
 	ch <- response
 }

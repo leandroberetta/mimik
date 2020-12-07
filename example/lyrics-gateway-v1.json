@@ -1,0 +1,46 @@
+[
+    {
+        "name": "Get songs",
+        "path": "/songs",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "songs-service",
+                "port": "8080",
+                "path": "songs",
+                "method": "GET"
+            }
+        ]
+    },
+    {
+        "name": "Get song with id 1",
+        "path": "/songs/1",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "songs-service",
+                "port": "8080",
+                "path": "songs/1",
+                "method": "GET"
+            },            
+            {
+                "name": "albums-service",
+                "port": "8080",
+                "path": "albums/1",
+                "method": "GET"
+            },
+            {
+                "name": "lyrics-service",
+                "port": "8080",
+                "path": "lyrics/1",
+                "method": "GET"
+            }
+        ]
+    },
+    {
+        "name": "Health",
+        "path": "/health",
+        "method": "GET",
+        "connections": []
+    }
+]

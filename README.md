@@ -1,6 +1,6 @@
 # Mimik
 
-Simple application to simulate being a microservice in a mesh. 
+Simple application to simulate being a service in a mesh. 
 
 ## Usage
 
@@ -65,9 +65,38 @@ The following file describes the endpoints that a Mimik instances listens to and
 
 ## Example
 
-The health request from above, doesn't have any connections and its response looks like:
+### Right Lyrics
+
+The following command will create a fake application called Right Lyrics, in terms of services it looks like:
+
+![right-lyrics](./example/mesh.png)
+
+#### Deployment
 
 ```bash
-curl http://localhost:8080/health
-{"name":"lyrics-page","version":"v1","path":"/health","statusCode":200,"upstreamResponse":[]}
+kubectl create namespace right-lyrics
+
+kubectl label namespace right-lyrics istio-injection=enabled
+
+kubectl create configmap lyrics-page-v1 --from-file=example/lyrics-page-v1.json -n right-lyrics
+kubectl create configmap lyrics-gateway-v1 --from-file=example/lyrics-gateway-v1.json -n right-lyrics
+kubectl create configmap lyrics-service-v1 --from-file=example/lyrics-service-v1.json -n right-lyrics
+kubectl create configmap albums-service-v1 --from-file=example/albums-service-v1.json -n right-lyrics
+kubectl create configmap songs-service-v1 --from-file=example/songs-service-v1.json -n right-lyrics
+kubectl create configmap songs-service-v2 --from-file=example/songs-service-v2.json -n right-lyrics
+kubectl create configmap hits-service-v1 --from-file=example/hits-service-v1.json -n right-lyrics
+
+helm install lyrics-page-v1 ./chart --set version=v1 --set serviceName=lyrics-page -n right-lyrics
+helm install lyrics-gateway-v1 ./chart --set version=v1 --set serviceName=lyrics-gateway -n right-lyrics
+helm install lyrics-service-v1 ./chart --set version=v1 --set serviceName=lyrics-service -n right-lyrics
+helm install albums-service-v1 ./chart --set version=v1 --set serviceName=albums-service -n right-lyrics
+helm install songs-service-v1 ./chart --set version=v1 --set serviceName=songs-service -n right-lyrics
+helm install songs-service-v2 ./chart --set version=v2 --set serviceName=songs-service --set createService=false -n right-lyrics
+helm install hits-service-v1 ./chart --set version=v1 --set serviceName=hits-service -n right-lyrics
+
+export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
+export INGRESS_HOST=$(minikube ip)
+export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT 
+
+curl http://$GATEWAY_URL/songs/1
 ```

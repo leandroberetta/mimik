@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Get hits with id 1",
+        "path": "/hits/1",
+        "method": "GET",
+        "connections": []
+    },
+    {
+        "name": "Health",
+        "path": "/health",
+        "method": "GET",
+        "connections": []
+    }
+]
