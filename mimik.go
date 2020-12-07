@@ -11,40 +11,40 @@ import (
 	"strings"
 )
 
-type Endpoint struct {
+type endpoint struct {
 	Name        string       `json:"name"`
 	Path        string       `json:"path"`
 	Method      string       `json:"method"`
-	Connections []Connection `json:"connections"`
+	Connections []connection `json:"connections"`
 }
 
-type Connection struct {
+type connection struct {
 	Name   string `json:"name"`
 	Port   string `json:"port"`
 	Path   string `json:"path"`
 	Method string `json:"method"`
 }
 
-type Service struct {
+type service struct {
 	Name      string
 	Port      string
-	Endpoints []Endpoint
+	Endpoints []endpoint
 }
 
-type Response struct {
+type response struct {
 	Name             string     `json:"name"`
 	Version          string     `json:"version"`
 	Path             string     `json:"path"`
 	StatusCode       int        `json:"statusCode"`
-	UpstreamResponse []Response `json:"upstreamResponse"`
+	UpstreamResponse []response `json:"upstreamResponse"`
 }
 
-type HTTPClient interface {
+type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
 func main() {
-	service, _ := NewService(
+	service, _ := newService(
 		os.Getenv("MIMIK_SERVICE_NAME"),
 		os.Getenv("MIMIK_SERVICE_PORT"),
 		os.Getenv("MIMIK_ENDPOINTS_FILE"),
@@ -71,13 +71,13 @@ func getVersion(fileName string) string {
 	return version
 }
 
-func NewService(name, port, fileName, version string) (Service, error) {
-	service := Service{Name: name, Port: port}
+func newService(name, port, fileName, version string) (service, error) {
+	service := service{Name: name, Port: port}
 	err := loadEndpoints(fileName, &service.Endpoints)
 	return service, err
 }
 
-func loadEndpoints(fileName string, endpoints *[]Endpoint) error {
+func loadEndpoints(fileName string, endpoints *[]endpoint) error {
 	file, err := os.Open(fileName)
 	defer file.Close()
 	bytes, err := ioutil.ReadAll(file)
@@ -85,48 +85,48 @@ func loadEndpoints(fileName string, endpoints *[]Endpoint) error {
 	return err
 }
 
-func endpointHandler(service Service, client HTTPClient) http.HandlerFunc {
+func endpointHandler(service service, client httpClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := Response{Name: service.Name, Version: "v1", StatusCode: http.StatusNotFound}
-		ch := make(chan Response)
+		resp := response{Name: service.Name, Version: "v1", StatusCode: http.StatusNotFound}
+		ch := make(chan response)
 		for _, endpoint := range service.Endpoints {
-			response.Path = r.URL.Path
+			resp.Path = r.URL.Path
 			if endpoint.Path == r.URL.Path {
-				response.StatusCode = http.StatusOK
-				upstreamResponse := make([]Response, len(endpoint.Connections))
+				resp.StatusCode = http.StatusOK
+				upstreamResponse := make([]response, len(endpoint.Connections))
 				for _, connection := range endpoint.Connections {
 					go handleReq(makeURL(connection), connection.Method, client, ch)
 				}
-				for i, _ := range endpoint.Connections {
+				for i := range endpoint.Connections {
 					upstreamResponse[i] = <-ch
 				}
-				response.UpstreamResponse = upstreamResponse
+				resp.UpstreamResponse = upstreamResponse
 			}
 		}
-		responseJSON, _ := json.Marshal(response)
+		responseJSON, _ := json.Marshal(resp)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(responseJSON)
 	}
 }
 
-func makeURL(connection Connection) string {
+func makeURL(connection connection) string {
 	return fmt.Sprintf("http://%s:%s/%s", connection.Name, connection.Port, connection.Path)
 }
 
-func handleReq(url, method string, client HTTPClient, ch chan Response) {
+func handleReq(url, method string, client httpClient, ch chan response) {
 	req, err := http.NewRequest(method, url, nil)
 	resp, err := client.Do(req)
 	if err != nil {
-		ch <- Response{StatusCode: http.StatusServiceUnavailable}
+		ch <- response{StatusCode: http.StatusServiceUnavailable}
 		return
 	}
 	defer resp.Body.Close()
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		ch <- Response{StatusCode: http.StatusServiceUnavailable}
+		ch <- response{StatusCode: http.StatusServiceUnavailable}
 		return
 	}
-	response := Response{}
+	response := response{}
 	err = json.Unmarshal(bytes, &response)
 	ch <- response
 }

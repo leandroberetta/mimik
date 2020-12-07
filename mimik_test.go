@@ -12,7 +12,7 @@ import (
 )
 
 func TestMakeValidURL(t *testing.T) {
-	connection := Connection{Name: "songs-service", Port: "8080", Path: "songs/1"}
+	connection := connection{Name: "songs-service", Port: "8080", Path: "songs/1"}
 	expected := "http://songs-service:8080/songs/1"
 
 	if got := makeURL(connection); got != expected {
@@ -23,13 +23,13 @@ func TestMakeValidURL(t *testing.T) {
 func TestGetVersion(t *testing.T) {
 	expected := "v2"
 
-	if got := getVersion("mimik_labels.txt"); got != expected {
+	if got := getVersion("test/mimik_labels.txt"); got != expected {
 		t.Errorf("Wrong version: Expected %s - Got %s", expected, got)
 	}
 }
 
 func TestEndpointHandler(t *testing.T) {
-	service, _ := NewService("lyrics", "8080", "mimik_test.json", "mimik_labels.txt")
+	service, _ := newService("lyrics", "8080", "test/mimik_test.json", "test/mimik_labels.txt")
 
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestEndpointHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClient := NewMockHTTPClient(ctrl)
 
-	response := Response{Name: "songs-service", Version: "v1", Path: "/songs/1", StatusCode: 200, UpstreamResponse: []Response{}}
+	response := response{Name: "songs-service", Version: "v1", Path: "/songs/1", StatusCode: 200, UpstreamResponse: []response{}}
 	responseJSON, _ := json.Marshal(response)
 	responseBytes := ioutil.NopCloser(bytes.NewReader(responseJSON))
 
@@ -58,7 +58,7 @@ func TestNewService(t *testing.T) {
 	expectedServiceName := "lyrics"
 	expectedServicePort := "8080"
 
-	service, _ := NewService(expectedServiceName, expectedServicePort, "mimik_test.json", "mimik_labels.txt")
+	service, _ := newService(expectedServiceName, expectedServicePort, "test/mimik_test.json", "test/mimik_labels.txt")
 
 	if gotServiceName := service.Name; gotServiceName != expectedServiceName {
 		t.Errorf("Wrong service name: Expected %s - Got %s", expectedServiceName, gotServiceName)
