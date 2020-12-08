@@ -89,13 +89,14 @@ func endpointHandler(service service, client httpClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp := response{Name: service.Name, Version: "v1", StatusCode: http.StatusNotFound}
 		ch := make(chan response)
+		headers := getHeaders(r.Header)
 		for _, endpoint := range service.Endpoints {
 			resp.Path = r.URL.Path
 			if endpoint.Path == r.URL.Path {
 				resp.StatusCode = http.StatusOK
 				upstreamResponse := make([]response, len(endpoint.Connections))
 				for _, connection := range endpoint.Connections {
-					go handleReq(makeURL(connection), connection.Method, client, ch)
+					go handleReq(makeURL(connection), connection.Method, headers, client, ch)
 				}
 				for i := range endpoint.Connections {
 					upstreamResponse[i] = <-ch
@@ -109,12 +110,27 @@ func endpointHandler(service service, client httpClient) http.HandlerFunc {
 	}
 }
 
+func getHeaders(header http.Header) map[string]string {
+	headers := make(map[string]string)
+	headers["x-request-id"] = header.Get("x-request-id")
+	headers["x-b3-traceid"] = header.Get("x-b3-traceid")
+	headers["x-b3-spanid"] = header.Get("x-b3-spanid")
+	headers["x-b3-parentspanid"] = header.Get("x-b3-parentspanid")
+	headers["x-b3-sampled"] = header.Get("x-b3-sampled")
+	headers["x-b3-flags"] = header.Get("x-b3-flags")
+	headers["Authorization"] = header.Get("Authorization")
+	return headers
+}
+
 func makeURL(connection connection) string {
 	return fmt.Sprintf("http://%s:%s/%s", connection.Name, connection.Port, connection.Path)
 }
 
-func handleReq(url, method string, client httpClient, ch chan response) {
+func handleReq(url, method string, headers map[string]string, client httpClient, ch chan response) {
 	req, err := http.NewRequest(method, url, nil)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		ch <- response{StatusCode: http.StatusServiceUnavailable}
