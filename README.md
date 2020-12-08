@@ -1,6 +1,8 @@
 # Mimik
 
-Simple application to simulate a service (or many) in a mesh deployed in Kubernetes. Helpful to test Istio features like traffic routing, tracing, security and more. 
+Simulates being a service (or many) in a mesh. 
+
+Helpful to test Istio features like traffic routing, tracing, security and more. 
 
 ## Usage
 
