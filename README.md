@@ -6,11 +6,34 @@ Helpful to test Istio features like traffic routing, tracing, security and more.
 
 ## Usage
 
+Mimik can be instanced many times to create a mesh, each instance needs some information to work and to communicate with others instances.
+
+The easiest way to deploy an instance is with a Helm chart, but before, a ConfigMap with the endpoints configuration needs to be created in the same namespace where the Mimik instance will be deployed:
+
+```bash
+echo '[
+    {
+        "name": "Hello World",
+        "path": "/",
+        "method": "GET",
+        "connections": []
+    }
+]' > hello-world-v1.json
+
+kubectl create configmap hello-world-v1 --from-file=example/hello-world-v1.json -n hello-world
+
+helm install hello-world-v1 ./chart --set version=v1 --set serviceName=hello-world -n hello-world
+```
+
+Note: The ConfigMap needs to be called serviceName-version by convention (The Mimik deployment has configured the ConfigMap)
+
+### Internals
+
 Any Mimik instance needs to have the following configuration:
 
-### Environment Variables
+#### Environment Variables
 
-The following environment variables are needed to create a Mimik instance:
+The following environment variables are needed to create a Mimik instance manually (without the Helm chart):
 
 | Variable | Description |
 | - | - |
@@ -19,7 +42,7 @@ The following environment variables are needed to create a Mimik instance:
 | MIMIK_ENDPOINTS_FILE | A file containing the endpoints configuration and they connections to upstream services |
 | MIMIK_LABELS_FILE | A file containing labels, Mimik looks for the version label specifically in the file, if the file does not exists or does not have the version label, the default is v1 |
 
-### Endpoints
+#### Endpoints
 
 The following file describes the endpoints that a Mimik instance listens to and the connections it has to other upstream services:
 
@@ -97,6 +120,12 @@ helm install songs-service-v1 ./chart --set version=v1 --set serviceName=songs-s
 helm install songs-service-v2 ./chart --set version=v2 --set serviceName=songs-service --set createService=false -n right-lyrics
 helm install hits-service-v1 ./chart --set version=v1 --set serviceName=hits-service -n right-lyrics
 
+kubectl apply -f example/right-lyrics-gateway.yaml -n right-lyrics
+```
+
+#### Test
+
+```bash
 export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
 export INGRESS_HOST=$(minikube ip)
 export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT 
