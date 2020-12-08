@@ -1,5 +1,10 @@
-FROM python:3-onbuild
+FROM golang:1.14
 
-EXPOSE 5000
+WORKDIR /go/src/app
 
-CMD [ "python", "./mimik.py" ]
+COPY . .
+
+RUN go get -d -v ./...
+RUN go install -v ./...
+
+CMD ["mimik"]

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.serviceName }}
+    version: {{ .Values.version }}
+  name: {{ .Values.serviceName }}-{{ .Values.version }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.serviceName }}
+      version: {{ .Values.version }}
+  strategy:
+    type: RollingUpdate
+  template:      
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+      labels:
+        app: {{ .Values.serviceName }}
+        version: {{ .Values.version }}
+    spec:
+      volumes:
+      - name: pod-info
+        downwardAPI:
+          items:    
+          - fieldRef:
+              fieldPath: metadata.labels
+            path: pod_labels  
+      - name: endpoints
+        configMap:
+          name: {{ .Values.serviceName }}-{{ .Values.version }}
+          items:
+            - key: {{ .Values.serviceName }}-{{ .Values.version }}.json
+              path: {{ .Values.serviceName }}-{{ .Values.version }}.json    
+      containers:
+      - image: quay.io/leandroberetta/mimik:2.0.1        
+        imagePullPolicy: Always
+        name: {{ .Values.serviceName }}
+        env:
+        - name: MIMIK_SERVICE_NAME
+          value: {{ .Values.serviceName }}
+        - name: MIMIK_SERVICE_PORT
+          value: "8080"
+        - name: MIMIK_ENDPOINTS_FILE
+          value: /data/{{ .Values.serviceName }}-{{ .Values.version }}.json
+        - name: MIMIK_LABELS_FILE
+          value: /tmp/etc/pod_labels         
+        volumeMounts:
+        - name: pod-info
+          mountPath: /tmp/etc
+        - name: endpoints
+          mountPath: /data
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: 256Mi
+            cpu: 100m
+          requests:
+            memory: 256Mi
+            cpu: 100m

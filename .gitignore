@@ -1,6 +1,1 @@
-__pycache__
-.coverage
-.project
-*.pyc
-venv
 .DS_Store

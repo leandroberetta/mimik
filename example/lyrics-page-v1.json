@@ -1,0 +1,34 @@
+[
+    {
+        "name": "Get landing page",
+        "path": "/",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "lyrics-gateway",
+                "port": "8080",
+                "path": "songs",
+                "method": "GET"
+            }
+        ]
+    },
+    {
+        "name": "Get song with id 1",
+        "path": "/songs/1",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "lyrics-gateway",
+                "port": "8080",
+                "path": "songs/1",
+                "method": "GET"
+            }
+        ]
+    },
+    {
+        "name": "Health",
+        "path": "/health",
+        "method": "GET",
+        "connections": []
+    }
+]

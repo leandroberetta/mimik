@@ -1,71 +1,103 @@
 # Mimik
 
-Simple application to simulate being a microservice in a chain. 
-
-Helpful to test OpenShift Service Mesh (Istio) features like:
-
-* **Traffic Routing**: Allows to set different service versions (v1, v2) to try different routing configurations
-* **Tracing**: Propagates the needed HTTP headers for tracing
-* **Circuit Breakers**: Returns a configurable HTTP 503 error in any part of the chain
-* **JWT**: Propagates the authentication header through services)
-
-Mimik can be instanced many times with different parameters each time thanks to an included OpenShift template.
+Simple application to simulate a service (or many) in a mesh deployed in Kubernetes. Helpful to test Istio features like traffic routing, tracing, security and more. 
 
 ## Usage
 
-### Template Parameters
+Any Mimik instance needs to have the following configuration:
 
-* **APP_NAME**: Application name
-* **APP_VERSION**: Application version
-* **MIMIK_TYPE**: *passthrough* to continue the chain calling another service or *edge* to end it
-* **MIMIK_DESTINATION**: The next service's URL to call to
-* **MIMIK_SIMULATE_ERROR**: "true" to return a 503 error
+### Environment Variables
 
-## Demonstration
+The following environment variables are needed to create a Mimik instance:
 
-The goal is to deploy some mimik services to achieve the following topology:
+| Variable | Description |
+| - | - |
+| MIMIK_SERVICE_NAME | The instance name |
+| MIMIK_SERVICE_PORT | The instance port |
+| MIMIK_ENDPOINTS_FILE | A file containing the endpoints configuration and they connections to upstream services |
+| MIMIK_LABELS_FILE | A file containing labels, Mimik looks for the version label specifically in the file, if the file does not exists or does not have the version label, the default is v1 |
 
-![Mesh](mesh.png)
+### Endpoints
 
-Create the following resources in an OpenShift cluster:
+The following file describes the endpoints that a Mimik instance listens to and the connections it has to other upstream services:
 
-```bash
-oc create namespace musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=page \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://albums:5000/albums | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=albums \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://songs:5000/songs | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=songs \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=songs \
-    -p APP_VERSION=v2 \
-    -p MIMIK_TYPE=passthrough \
-    -p MIMIK_DESTINATION=http://lyrics:5000/lyrics | oc apply -f - -n musik
-
-oc process -f mimik-template.yaml -n musik \
-    -p APP_NAME=lyrics \
-    -p APP_VERSION=v1 \
-    -p MIMIK_TYPE=edge | oc apply -f - -n musik
-
-oc apply -f istio.yaml -n musik
+```json
+[
+    {
+        "name": "Get songs",
+        "path": "/",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "songs-service",
+                "port": "8080",
+                "path": "songs",
+                "method": "GET"
+            }
+        ]
+    },
+    {
+        "name": "Get song with id 1",
+        "path": "/songs/1",
+        "method": "GET",
+        "connections": [
+            {
+                "name": "songs-service",
+                "port": "8080",
+                "path": "songs/1",
+                "method": "GET"
+            },
+            {
+                "name": "hits-service",
+                "port": "8080",
+                "path": "hits/1",
+                "method": "POST"
+            }
+        ]
+    },
+    {
+        "name": "Health",
+        "path": "/health",
+        "method": "GET",
+        "connections": []
+    }
+]
 ```
 
-Then, test the call to the first application (the page):
+## Example
+
+### Right Lyrics
+
+The following command will create a fake application called Right Lyrics, in terms of services it looks like:
+
+![right-lyrics](./example/mesh.png)
+
+#### Deployment
 
 ```bash
-curl $(oc get route istio-ingressgateway -o jsonpath='{.spec.host}' -n istio-system)/page
-````
+kubectl create namespace right-lyrics
+
+kubectl label namespace right-lyrics istio-injection=enabled
+
+kubectl create configmap lyrics-page-v1 --from-file=example/lyrics-page-v1.json -n right-lyrics
+kubectl create configmap lyrics-gateway-v1 --from-file=example/lyrics-gateway-v1.json -n right-lyrics
+kubectl create configmap lyrics-service-v1 --from-file=example/lyrics-service-v1.json -n right-lyrics
+kubectl create configmap albums-service-v1 --from-file=example/albums-service-v1.json -n right-lyrics
+kubectl create configmap songs-service-v1 --from-file=example/songs-service-v1.json -n right-lyrics
+kubectl create configmap songs-service-v2 --from-file=example/songs-service-v2.json -n right-lyrics
+kubectl create configmap hits-service-v1 --from-file=example/hits-service-v1.json -n right-lyrics
+
+helm install lyrics-page-v1 ./chart --set version=v1 --set serviceName=lyrics-page -n right-lyrics
+helm install lyrics-gateway-v1 ./chart --set version=v1 --set serviceName=lyrics-gateway -n right-lyrics
+helm install lyrics-service-v1 ./chart --set version=v1 --set serviceName=lyrics-service -n right-lyrics
+helm install albums-service-v1 ./chart --set version=v1 --set serviceName=albums-service -n right-lyrics
+helm install songs-service-v1 ./chart --set version=v1 --set serviceName=songs-service -n right-lyrics
+helm install songs-service-v2 ./chart --set version=v2 --set serviceName=songs-service --set createService=false -n right-lyrics
+helm install hits-service-v1 ./chart --set version=v1 --set serviceName=hits-service -n right-lyrics
+
+export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
+export INGRESS_HOST=$(minikube ip)
+export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT 
+
+curl http://$GATEWAY_URL/songs/1
+```
