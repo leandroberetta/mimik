@@ -6,7 +6,7 @@ Helpful to test Istio features like traffic routing, tracing, security and more.
 
 ## Usage
 
-Mimik can be instanced many times to create a mesh, each instance needs some information to work and to communicate with others instances.
+Mimik can be instanced many times to create a mesh, each instance needs some configuration to work and to communicate with other instances.
 
 The easiest way to deploy an instance is with a Helm chart, but before, a ConfigMap with the endpoints configuration needs to be created in the same namespace where the Mimik instance will be deployed:
 
@@ -93,7 +93,7 @@ The following file describes the endpoints that a Mimik instance listens to and 
 
 ### Right Lyrics
 
-The following command will create a fake application called Right Lyrics, in terms of services it looks like:
+The following commands will create a fake application called Right Lyrics, in terms of services it looks like:
 
 ![right-lyrics](./example/mesh.png)
 
