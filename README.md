@@ -94,7 +94,7 @@ The following file describes the endpoints that a Mimik instance listens for and
 
 ## Example
 
-### Istio on Minikube Installation
+### Istio on Minikube Installation
 
 ```bash
 minikube start --memory=8g --container-runtime=cri-o
