@@ -5,7 +5,7 @@
         "method": "GET",
         "connections": [
             {
-                "name": "songs-service",
+                "service": "songs-service",
                 "port": "8080",
                 "path": "songs",
                 "method": "GET"
@@ -18,19 +18,19 @@
         "method": "GET",
         "connections": [
             {
-                "name": "songs-service",
+                "service": "songs-service",
                 "port": "8080",
                 "path": "songs/1",
                 "method": "GET"
             },            
             {
-                "name": "albums-service",
+                "service": "albums-service",
                 "port": "8080",
                 "path": "albums/1",
                 "method": "GET"
             },
             {
-                "name": "lyrics-service",
+                "service": "lyrics-service",
                 "port": "8080",
                 "path": "lyrics/1",
                 "method": "GET"

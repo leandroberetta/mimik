@@ -12,11 +12,11 @@ import (
 )
 
 func TestMakeValidURL(t *testing.T) {
-	connection := connection{Name: "songs-service", Port: "8080", Path: "songs/1"}
+	connection := connection{Service: "songs-service", Port: "8080", Path: "songs/1"}
 	expected := "http://songs-service:8080/songs/1"
 
 	if got := makeURL(connection); got != expected {
-		t.Errorf("Wrong URL: Expected %s - Got %s", expected, got)
+		t.Errorf("wrong URL: expected %s - got %s", expected, got)
 	}
 }
 
@@ -24,7 +24,7 @@ func TestGetVersion(t *testing.T) {
 	expected := "v2"
 
 	if got := getVersion("test/mimik_labels.txt"); got != expected {
-		t.Errorf("Wrong version: Expected %s - Got %s", expected, got)
+		t.Errorf("wrong version: expected %s - got %s", expected, got)
 	}
 }
 
@@ -39,7 +39,7 @@ func TestEndpointHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockClient := NewMockHTTPClient(ctrl)
 
-	response := response{Name: "songs-service", Version: "v1", Path: "/songs/1", StatusCode: 200, UpstreamResponse: []response{}}
+	response := response{Name: "songs-service", Version: "v1", Path: "/songs/1", StatusCode: 200, UpstreamResponses: []response{}}
 	responseJSON, _ := json.Marshal(response)
 	responseBytes := ioutil.NopCloser(bytes.NewReader(responseJSON))
 
@@ -50,7 +50,7 @@ func TestEndpointHandler(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Wrong status code: Expected: %v - Got: %v", http.StatusOK, status)
+		t.Errorf("wrong status code: expected: %v - got: %v", http.StatusOK, status)
 	}
 }
 
@@ -61,35 +61,35 @@ func TestNewService(t *testing.T) {
 	service, _ := newService(expectedServiceName, expectedServicePort, "test/mimik_test.json", "test/mimik_labels.txt")
 
 	if gotServiceName := service.Name; gotServiceName != expectedServiceName {
-		t.Errorf("Wrong service name: Expected %s - Got %s", expectedServiceName, gotServiceName)
+		t.Errorf("wrong service name: expected %s - got %s", expectedServiceName, gotServiceName)
 	}
 
 	if gotServicePort := service.Port; gotServicePort != expectedServicePort {
-		t.Errorf("Wrong service port: Expected %s - Got %s", expectedServicePort, gotServicePort)
+		t.Errorf("wrong service port: expected %s - got %s", expectedServicePort, gotServicePort)
 	}
 
 	for _, endpoint := range service.Endpoints {
-		if endpoint.Name == "/songs/1" {
+		if endpoint.Path == "/songs/1" {
 			expectedConnections := 2
 
 			if gotConnections := len(endpoint.Connections); gotConnections != expectedConnections {
-				t.Errorf("Wrong number of connections: Expected %d - Got %d", expectedConnections, gotConnections)
+				t.Errorf("wrong number of connections: expected %d - got %d", expectedConnections, gotConnections)
 			}
 
 			for _, connection := range endpoint.Connections {
-				if connection.Name == "songs-service" {
+				if connection.Service == "songs-service" {
 					expectedPort := "8080"
 					expectedPath := "songs/1"
 					expectedMethod := "GET"
 
 					if gotPort := connection.Port; gotPort != expectedPort {
-						t.Errorf("Wrong connection port: Expected %s - Got %s", expectedPort, gotPort)
+						t.Errorf("wrong connection port: expected %s - got %s", expectedPort, gotPort)
 					}
 					if gotPath := connection.Path; gotPath != expectedPath {
-						t.Errorf("Wrong connection path: Expected %s - Got %s", expectedPath, gotPath)
+						t.Errorf("wrong connection path: expected %s - got %s", expectedPath, gotPath)
 					}
 					if gotMethod := connection.Method; gotMethod != expectedMethod {
-						t.Errorf("Wrong connection method: Expected %s - Got %s", expectedMethod, gotMethod)
+						t.Errorf("wrong connection method: expected %s - got %s", expectedMethod, gotMethod)
 					}
 				}
 			}

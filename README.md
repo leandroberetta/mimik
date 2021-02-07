@@ -1,14 +1,16 @@
 # Mimik
 
-Simulates being a service (or many) in a mesh. 
+Simulate being a service (or many) in a mesh. 
 
 Helpful to test Istio features like traffic routing, tracing, security and more. 
 
 ## Usage
 
-Mimik can be instanced many times to create a mesh, each instance needs some configuration to work and to communicate with other instances.
+Mimik can be instanced many times to create a mesh, each instance needs some configuration to listen for connections and to communicate with other instances.
 
-The easiest way to deploy an instance is with a Helm chart, but before, a ConfigMap with the endpoints configuration needs to be created in the same namespace where the Mimik instance will be deployed:
+The easiest way to deploy an instance is with a Helm chart, but before, a ConfigMap with the endpoints configuration needs to be created in the same namespace where the Mimik instance will be deployed. 
+
+The following is a basic example:
 
 ```bash
 echo '[
@@ -20,12 +22,13 @@ echo '[
     }
 ]' > hello-world-v1.json
 
-kubectl create configmap hello-world-v1 --from-file=example/hello-world-v1.json -n hello-world
+kubectl create namespace hello-world
+kubectl create configmap hello-world-v1 --from-file=hello-world-v1.json -n hello-world
 
 helm install hello-world-v1 ./chart --set version=v1 --set serviceName=hello-world -n hello-world
 ```
 
-Note: The ConfigMap needs to be called serviceName-version by convention (The Mimik deployment has configured the ConfigMap)
+Note: The ConfigMap needs to be called serviceName-version by convention.
 
 ### Internals
 
@@ -39,12 +42,12 @@ The following environment variables are needed to create a Mimik instance manual
 | - | - |
 | MIMIK_SERVICE_NAME | The instance name |
 | MIMIK_SERVICE_PORT | The instance port |
-| MIMIK_ENDPOINTS_FILE | A file containing the endpoints configuration and they connections to upstream services |
-| MIMIK_LABELS_FILE | A file containing labels, Mimik looks for the version label specifically in the file, if the file does not exists or does not have the version label, the default is v1 |
+| MIMIK_ENDPOINTS_FILE | A file containing the endpoints configuration and the connections to upstream services |
+| MIMIK_LABELS_FILE | A file containing labels, Mimik looks for the version label specifically in the file, if the file does not exists or does not have the version label it defaults to v1 |
 
 #### Endpoints
 
-The following file describes the endpoints that a Mimik instance listens to and the connections it has to other upstream services:
+The following file describes the endpoints that a Mimik instance listens for and the connections it has to other upstream services:
 
 ```json
 [
@@ -91,6 +94,21 @@ The following file describes the endpoints that a Mimik instance listens to and 
 
 ## Example
 
+### Istio on Minikube Installation
+
+```bash
+minikube start --memory=8g --container-runtime=cri-o
+
+istioctl install --set profile=demo --skip-confirmation
+
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.8/samples/addons/prometheus.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.8/samples/addons/grafana.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.8/samples/addons/kiali.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.8/samples/addons/jaeger.yaml
+
+istioctl dashboard kiali
+```
+
 ### Right Lyrics
 
 The following commands will create a fake application called Right Lyrics, in terms of services it looks like:
@@ -130,5 +148,5 @@ export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -
 export INGRESS_HOST=$(minikube ip)
 export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT 
 
-curl http://$GATEWAY_URL/songs/1
+for i in {1..100}; do curl http://$GATEWAY_URL/songs/1; done
 ```

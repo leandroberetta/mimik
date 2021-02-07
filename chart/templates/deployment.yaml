@@ -35,7 +35,7 @@ spec:
             - key: {{ .Values.serviceName }}-{{ .Values.version }}.json
               path: {{ .Values.serviceName }}-{{ .Values.version }}.json    
       containers:
-      - image: quay.io/leandroberetta/mimik:2.0.1        
+      - image: quay.io/leandroberetta/mimik:latest       
         imagePullPolicy: Always
         name: {{ .Values.serviceName }}
         env:

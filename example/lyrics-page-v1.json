@@ -5,7 +5,7 @@
         "method": "GET",
         "connections": [
             {
-                "name": "lyrics-gateway",
+                "service": "lyrics-gateway",
                 "port": "8080",
                 "path": "songs",
                 "method": "GET"
@@ -18,7 +18,7 @@
         "method": "GET",
         "connections": [
             {
-                "name": "lyrics-gateway",
+                "service": "lyrics-gateway",
                 "port": "8080",
                 "path": "songs/1",
                 "method": "GET"

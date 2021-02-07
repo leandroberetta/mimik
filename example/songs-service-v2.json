@@ -11,7 +11,7 @@
         "method": "GET",
         "connections": [
             {
-                "name": "hits-service",
+                "service": "hits-service",
                 "port": "8080",
                 "path": "hits/1",
                 "method": "GET"

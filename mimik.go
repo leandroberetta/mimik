@@ -19,24 +19,25 @@ type endpoint struct {
 }
 
 type connection struct {
-	Name   string `json:"name"`
-	Port   string `json:"port"`
-	Path   string `json:"path"`
-	Method string `json:"method"`
+	Service string `json:"service"`
+	Port    string `json:"port"`
+	Path    string `json:"path"`
+	Method  string `json:"method"`
 }
 
 type service struct {
 	Name      string
 	Port      string
+	Version   string
 	Endpoints []endpoint
 }
 
 type response struct {
-	Name             string     `json:"name"`
-	Version          string     `json:"version"`
-	Path             string     `json:"path"`
-	StatusCode       int        `json:"statusCode"`
-	UpstreamResponse []response `json:"upstreamResponse"`
+	Name              string     `json:"name"`
+	Version           string     `json:"version"`
+	Path              string     `json:"path"`
+	StatusCode        int        `json:"statusCode"`
+	UpstreamResponses []response `json:"upstreamResponses"`
 }
 
 type httpClient interface {
@@ -65,14 +66,14 @@ func getVersion(fileName string) string {
 	for scanner.Scan() {
 		values := strings.Split(scanner.Text(), "=")
 		if values[0] == "version" {
-			version = values[1]
+			return values[1]
 		}
 	}
 	return version
 }
 
 func newService(name, port, fileName, version string) (service, error) {
-	service := service{Name: name, Port: port}
+	service := service{Name: name, Port: port, Version: version}
 	err := loadEndpoints(fileName, &service.Endpoints)
 	return service, err
 }
@@ -87,21 +88,23 @@ func loadEndpoints(fileName string, endpoints *[]endpoint) error {
 
 func endpointHandler(service service, client httpClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		resp := response{Name: service.Name, Version: "v1", StatusCode: http.StatusNotFound}
+		resp := response{Name: service.Name, Version: service.Version, StatusCode: http.StatusNotFound}
 		ch := make(chan response)
 		headers := getHeaders(r.Header)
 		for _, endpoint := range service.Endpoints {
 			resp.Path = r.URL.Path
 			if endpoint.Path == r.URL.Path {
 				resp.StatusCode = http.StatusOK
-				upstreamResponse := make([]response, len(endpoint.Connections))
+				upstreamResponses := make([]response, len(endpoint.Connections))
+				log.Println(endpoint.Connections)
 				for _, connection := range endpoint.Connections {
-					go handleReq(makeURL(connection), connection.Method, headers, client, ch)
+					log.Printf("go routint for %s", connection.Path)
+					go handleReq(makeURL(connection), connection, headers, client, ch)
 				}
 				for i := range endpoint.Connections {
-					upstreamResponse[i] = <-ch
+					upstreamResponses[i] = <-ch
 				}
-				resp.UpstreamResponse = upstreamResponse
+				resp.UpstreamResponses = upstreamResponses
 			}
 		}
 		responseJSON, _ := json.Marshal(resp)
@@ -122,27 +125,35 @@ func getHeaders(header http.Header) map[string]string {
 	return headers
 }
 
-func makeURL(connection connection) string {
-	return fmt.Sprintf("http://%s:%s/%s", connection.Name, connection.Port, connection.Path)
-}
-
-func handleReq(url, method string, headers map[string]string, client httpClient, ch chan response) {
-	req, err := http.NewRequest(method, url, nil)
+func handleReq(url string, conn connection, headers map[string]string, client httpClient, ch chan response) {
+	req, err := http.NewRequest(conn.Method, url, nil)
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		ch <- response{StatusCode: http.StatusServiceUnavailable}
+		ch <- makeErrorResponse(conn, http.StatusServiceUnavailable)
 		return
 	}
 	defer resp.Body.Close()
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		ch <- response{StatusCode: http.StatusServiceUnavailable}
+		ch <- makeErrorResponse(conn, http.StatusInternalServerError)
 		return
 	}
-	response := response{}
-	err = json.Unmarshal(bytes, &response)
-	ch <- response
+	res := response{}
+	err = json.Unmarshal(bytes, &res)
+	if err != nil {
+		ch <- makeErrorResponse(conn, http.StatusInternalServerError)
+		return
+	}
+	ch <- res
+}
+
+func makeURL(conn connection) string {
+	return fmt.Sprintf("http://%s:%s/%s", conn.Service, conn.Port, conn.Path)
+}
+
+func makeErrorResponse(conn connection, error int) response {
+	return response{Name: conn.Service, Version: "", StatusCode: error, Path: conn.Path, UpstreamResponses: nil}
 }
