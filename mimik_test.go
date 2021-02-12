@@ -12,7 +12,7 @@ import (
 )
 
 func TestMakeValidURL(t *testing.T) {
-	connection := connection{Service: "songs-service", Port: "8080", Path: "songs/1"}
+	connection := connection{Service: "songs-service", Port: 8080, Path: "songs/1"}
 	expected := "http://songs-service:8080/songs/1"
 
 	if got := makeURL(connection); got != expected {
@@ -78,12 +78,12 @@ func TestNewService(t *testing.T) {
 
 			for _, connection := range endpoint.Connections {
 				if connection.Service == "songs-service" {
-					expectedPort := "8080"
+					expectedPort := 8080
 					expectedPath := "songs/1"
 					expectedMethod := "GET"
 
 					if gotPort := connection.Port; gotPort != expectedPort {
-						t.Errorf("wrong connection port: expected %s - got %s", expectedPort, gotPort)
+						t.Errorf("wrong connection port: expected %d - got %d", expectedPort, gotPort)
 					}
 					if gotPath := connection.Path; gotPath != expectedPath {
 						t.Errorf("wrong connection path: expected %s - got %s", expectedPath, gotPath)

@@ -1,0 +1,207 @@
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: lyrics-page-v1
+spec:
+  service: lyrics-page
+  version: v1
+  endpoints:
+    - path: /
+      method: GET
+      connections:
+        - service: lyrics-gateway
+          port: 8080
+          path: songs
+          method: GET
+    - path: /songs/1
+      method: GET
+      connections:
+        - service: lyrics-gateway
+          port: 8080
+          path: songs/1
+          method: GET
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: lyrics-gateway-v1
+spec:
+  service: lyrics-gateway
+  version: v1
+  endpoints:
+    - path: /songs
+      method: GET
+      connections:
+        - service: songs-service
+          port: 8080
+          path: songs
+          method: GET
+    - path: /songs/1
+      method: GET
+      connections:
+        - service: songs-service
+          port: 8080
+          path: songs/1
+          method: GET
+        - service: albums-service
+          port: 8080
+          path: albums/1
+          method: GET
+        - service: lyrics-service
+          port: 8080
+          path: lyrics/1
+          method: GET
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: songs-service-v1
+spec:
+  service: songs-service
+  version: v1
+  endpoints:
+    - path: /songs
+      method: GET
+      connections: []
+    - path: /songs/1
+      method: GET
+      connections: []
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: songs-service-v2
+spec:
+  service: songs-service
+  version: v2
+  endpoints:
+    - path: /songs
+      method: GET
+      connections: []
+    - path: /songs/1
+      method: GET
+      connections:
+        - service: hits-service
+          port: 8080
+          path: hits/1
+          method: GET
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: albums-service-v1
+spec:
+  service: albums-service
+  version: v1
+  endpoints:
+    - path: /albums/1
+      method: GET
+      connections: []
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: lyrics-service-v1
+spec:
+  service: lyrics-service
+  version: v1
+  endpoints:
+    - path: /lyrics/1
+      method: GET
+      connections: []
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: hits-service-v1
+spec:
+  service: hits-service
+  version: v1
+  endpoints:
+    - path: /hits/1
+      method: GET
+      connections: []
+    - path: /health
+      method: GET
+      connections: []
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: right-lyrics
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: lyrics-page
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - right-lyrics
+  http:
+    - route:
+        - destination:
+            host: lyrics-page
+            port:
+              number: 8080
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: songs-service
+spec:
+  host: songs-service
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: songs-service
+spec:
+  hosts:
+    - songs-service
+  http:
+  - route:
+    - destination:
+        host: songs-service
+        subset: v1
+      weight: 90
+    - destination:
+        host: songs-service
+        subset: v2
+      weight: 10

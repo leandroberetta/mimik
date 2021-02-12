@@ -20,7 +20,7 @@ type endpoint struct {
 
 type connection struct {
 	Service string `json:"service"`
-	Port    string `json:"port"`
+	Port    int    `json:"port"`
 	Path    string `json:"path"`
 	Method  string `json:"method"`
 }
@@ -96,9 +96,7 @@ func endpointHandler(service service, client httpClient) http.HandlerFunc {
 			if endpoint.Path == r.URL.Path {
 				resp.StatusCode = http.StatusOK
 				upstreamResponses := make([]response, len(endpoint.Connections))
-				log.Println(endpoint.Connections)
 				for _, connection := range endpoint.Connections {
-					log.Printf("go routint for %s", connection.Path)
 					go handleReq(makeURL(connection), connection, headers, client, ch)
 				}
 				for i := range endpoint.Connections {
@@ -151,7 +149,7 @@ func handleReq(url string, conn connection, headers map[string]string, client ht
 }
 
 func makeURL(conn connection) string {
-	return fmt.Sprintf("http://%s:%s/%s", conn.Service, conn.Port, conn.Path)
+	return fmt.Sprintf("http://%s:%d/%s", conn.Service, conn.Port, conn.Path)
 }
 
 func makeErrorResponse(conn connection, error int) response {
