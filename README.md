@@ -4,32 +4,48 @@ Simulate being a service (or many) in a mesh.
 
 Helpful to test Istio features like traffic routing, tracing, security and more. 
 
-## Example
+## Usage
+
+The following is a fake service mesh deployed with Mimik instances:
 
 ![right-lyrics](./docs/examples/mesh.png)
 
-## Usage
-
-Having the [Mimik operator](https://github.com/leandroberetta/mimik-operator) installed, the following custom resource creates a Mimik instance:
+For example, with the following custom resource, the first service can be created as follows:
 
 ```yaml
 apiVersion: mimik.veicot.io/v1alpha1
 kind: Mimik
 metadata:
-  name: hello-world-v1
+  name: lyrics-page-v1
 spec:
-  service: hello-world
+  service: lyrics-page
   version: v1
   endpoints:
-    - path: /hello
+    - path: /
+      method: GET
+      connections:
+        - service: lyrics-gateway
+          port: 8080
+          path: songs
+          method: GET
+    - path: /songs/1
+      method: GET
+      connections:
+        - service: lyrics-gateway
+          port: 8080
+          path: songs/1
+          method: GET
+    - path: /health
       method: GET
       connections: []
 ```
+
+The rest of the example is in the examples section.
 
 ## Documentation
 
 * [Internals](./docs/internals.md)
 * [Usage](./docs/usage.md)
 * Examples
-    * [Helm](./docs/examples/helm.md)
-    * [Operator](./docs/examples/operator.md)
+    * [Helm](./docs/examples/helm/helm.md)
+    * [Operator](./docs/examples/operator/operator.md)
