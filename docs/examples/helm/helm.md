@@ -29,3 +29,9 @@ helm install hits-service-v1 ./chart --set version=v1 --set serviceName=hits-ser
 
 oc apply -f docs/examples/helm/right-lyrics-gateway.yaml -n right-lyrics
 ```
+
+Generate traffic and test the mesh:
+
+```bash
+for i in {1..100}; do curl $(oc get route istio-ingressgateway -o jsonpath='{.spec.host}' -n istio-system)/songs/1; done;
+```
