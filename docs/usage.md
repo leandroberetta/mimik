@@ -6,7 +6,7 @@ Mimik can be instanced many times to create a mesh, each instance needs some con
 
 The easiest way to deploy an instance is with Mimik operator.
 
-In Mimik operator's repository there are instructions for installing it.
+In [Mimik operator's repository](https://github.com/leandroberetta/mimik-operator) there are instructions for installing it.
 
 Having the operator installed, the following CustomResource creates an instance:
 

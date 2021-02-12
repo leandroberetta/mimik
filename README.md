@@ -40,12 +40,9 @@ spec:
       connections: []
 ```
 
-The rest of the example is in the examples section.
+For the rest of the example, follow [this](./docs/examples/operator/operator.md) link.
 
 ## Documentation
 
 * [Internals](./docs/internals.md)
 * [Usage](./docs/usage.md)
-* Examples
-    * [Helm](./docs/examples/helm/helm.md)
-    * [Operator](./docs/examples/operator/operator.md)

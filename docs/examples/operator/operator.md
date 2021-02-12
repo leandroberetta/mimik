@@ -1,12 +1,14 @@
 # Right Lyrics (with Mimik operator)
 
-The following commands will create a fake application called Right Lyrics, in terms of services it looks like:
+The following is fake application called Right Lyrics based in Mimik instances.
 
 ## Topology
 
 ![right-lyrics](../mesh.png)
 
 ## Deployment
+
+Having the Mimik operator installed (see how to install it [here](https://github.com/leandroberetta/mimik-operator)).
 
 ```bash
 oc create namespace right-lyrics
