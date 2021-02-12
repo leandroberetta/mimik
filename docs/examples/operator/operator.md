@@ -16,4 +16,6 @@ oc apply -f right-lyrics.yaml -n right-lyrics
 
 Generate traffic and test the mesh:
 
+```bash
 for i in {1..100}; do curl $(oc get route istio-ingressgateway -o jsonpath='{.spec.host}' -n istio-system)/songs/1; done;
+```
