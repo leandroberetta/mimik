@@ -6,7 +6,7 @@ Helpful to test Istio features like traffic routing, tracing, security and more.
 
 ## Example
 
-![right-lyrics](./docs/mesh.png)
+![right-lyrics](./docs/examples/mesh.png)
 
 ## Usage
 
