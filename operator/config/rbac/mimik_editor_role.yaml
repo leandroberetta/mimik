@@ -1,0 +1,24 @@
+# permissions for end users to edit mimiks.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mimik-editor-role
+rules:
+- apiGroups:
+  - mimik.veicot.io
+  resources:
+  - mimiks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mimik.veicot.io
+  resources:
+  - mimiks/status
+  verbs:
+  - get

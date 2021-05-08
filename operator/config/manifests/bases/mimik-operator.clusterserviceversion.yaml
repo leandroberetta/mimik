@@ -1,0 +1,49 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: mimik-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: Mimik is the Schema for the mimiks API
+      displayName: Mimik
+      kind: Mimik
+      name: mimiks.mimik.veicot.io
+      version: v1alpha1
+  description: Simulate being a service (or many) in a mesh.
+  displayName: Mimik
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - istio
+  - kubernetes
+  links:
+  - name: Mimik Operator
+    url: https://mimik-operator.domain
+  maintainers:
+  - email: lea.beretta@gmail.com
+    name: Leandro Beretta
+  maturity: alpha
+  provider:
+    name: Leandro Beretta
+    url: veicot.io
+  version: 0.0.0

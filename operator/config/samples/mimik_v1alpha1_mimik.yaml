@@ -1,0 +1,7 @@
+apiVersion: mimik.veicot.io/v1alpha1
+kind: Mimik
+metadata:
+  name: mimik-sample
+spec:
+  # Add fields here
+  foo: bar
