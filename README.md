@@ -1,6 +1,6 @@
 # Mimik
 
-Simulate being a service (or many) in a mesh. 
+Simulate being a service (or many) in a mesh.
 
 Helpful to test Istio features like traffic routing, tracing, security and more. 
 
@@ -47,5 +47,6 @@ For the rest of the example, follow [this](./docs/examples/operator/operator.md)
 * [Internals](./docs/internals.md)
 * [Usage](./docs/usage.md)
 * Examples
+  * [Music Store](./docs/examples/music-store/music-store.md)
   * [Pets](./docs/examples/pets/pets.md)
   * [Right Lyrics](./docs/examples/right-lyrics/right-lyrics.md)
