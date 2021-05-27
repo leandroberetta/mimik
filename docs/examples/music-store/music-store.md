@@ -223,6 +223,7 @@ Notice that the backend is consumed by an external client (through the ingress g
 
 The next step is to add a traffic management rule, for example a fault injection in the backend to start returning a 500 error in every request:
 
+```
 echo "apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -248,6 +249,7 @@ spec:
             subset: v1
             port:
               number: 8080" | kubectl apply -f -
+```
 
 Inspect the graph in Kiali:
 
@@ -259,6 +261,7 @@ This behaviour is expected because in the backend's virtual service there are so
 
 Apply the following virtual service that adds a new entry in the hosts list (the internal service of the backend):
 
+```
 echo "apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -285,11 +288,13 @@ spec:
             subset: v1
             port:
               number: 8080" | kubectl apply -f -              
+```
 
 Inpect the graph in Kiali and observe that the rule is still not applying, it is still working, and that is because another configuration is missing.
 
 In the virtual service, the only gateway that is configured is the gateway that is related to the ingress gateway (external traffic getting into the mesh), so internal traffic is not being controlled by this rule, to fix this situation, an special value "mesh" can be configured in the gateways list as follows:
 
+```
 echo "apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -317,6 +322,7 @@ spec:
             subset: v1
             port:
               number: 8080" | kubectl apply -f -  
+```
 
 Inpect the graph in Kiali and observe that the rule is applying for both external and internal calls:
 
