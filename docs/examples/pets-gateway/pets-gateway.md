@@ -1,4 +1,4 @@
-# Pets
+# Pets Gateway
 
 The following is a demonstration on how to expose services from two different namespaces through a unique Istio gateway.
 
@@ -7,7 +7,7 @@ The following is a demonstration on how to expose services from two different na
 Start a Minikube instance:
 
 ```
-minikube start --memory=7962 --cpus=4 --driver=hyperkit
+minikube start --memory=8g --cpus=4
 ```
 
 Install OLM:
