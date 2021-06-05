@@ -64,7 +64,7 @@ spec:
 
 ```bash
 kubectl create namespace right-lyrics
-
+kubectl label namespace right-lyrics istio-injection=enabled
 kubectl apply -f right-lyrics.yaml -n right-lyrics
 ```
 
