@@ -70,7 +70,7 @@ kubectl apply -f right-lyrics.yaml -n right-lyrics
 
 ### Topology
 
-![right-lyrics](../mesh.png)
+![right-lyrics](right-lyrics.png)
 
 ### Test
 
