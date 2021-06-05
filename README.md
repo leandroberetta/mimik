@@ -14,34 +14,7 @@ Mimik is a generic workload that can expose configurable endpoints (consumed by 
 
 Mimik instances run on Kubernetes clusters. The easiest way to create them is with Mimik operator. Check [this](docs/operator.md) instructions to install it. As an alternative each instance can be created with Helm following [this](docs/helm.md) instructions.
 
-### Installation
-
-Install Mimik operator with OLM creating a CatalogSource and a Subscription:
-
-```yaml
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: mimik-catalog
-  namespace: olm
-spec:
-  sourceType: grpc
-  image: quay.io/leandroberetta/mimik-operator-index:v0.0.1
----
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: mimik-subscription
-  namespace: operators 
-spec:
-  channel: alpha
-  installPlanApproval: Automatic
-  name: mimik-operator
-  source: mimik-catalog
-  sourceNamespace: olm
-```
-
-### Demo
+## Hello World
 
 The following example will deploy a minimal mesh based on two services, a frontend and a backend and also configure Istio basic resources to expose the frontend: 
 
