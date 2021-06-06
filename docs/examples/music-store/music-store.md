@@ -62,7 +62,7 @@ spec:
 
 A very simple microservice architecture will be used to demonstrate the concepts:
 
-### Music Store
+### Deployment
 
 This application is generated with Mimik instances:
 
@@ -109,7 +109,7 @@ spec:
       connections: []" | kubectl apply -f -
 ```
 
-## Istio
+### Istio
 
 Configure the following entries in the /etc/hosts to consume the services:
 
@@ -205,6 +205,8 @@ spec:
       version: v1" | kubectl apply -f -        
 
 ```
+
+### Test
 
 Generate some load to consume both the UI and the backend from outside the mesh (notice that the UI consumes the backend too):
 

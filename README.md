@@ -87,9 +87,8 @@ After a few requests, the following topology can be seen in the graph generated 
 
 ![mimik](docs/examples/hello-world/hello_world.png)
 
-## Examples
+## More examples
 
-* [Hello World](docs/examples/hello-world/hello-world.md)
 * [Music Store](docs/examples/music-store/music-store.md)
 * [Pets Gateway](docs/examples/pets-gateway/pets-gateway.md)
 * [Right Lyrics](docs/examples/right-lyrics/right-lyrics.md)
