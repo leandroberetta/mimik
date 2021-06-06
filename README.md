@@ -8,7 +8,7 @@ Helpful to test Istio features like traffic routing, tracing, security and more.
 
 ## Introduction
 
-Mimik is a generic workload that can expose configurable endpoints (consumed by downstream services) and connect them to upstream services. It can be instantiated many times with different configurations to generate a service mesh.
+Mimik means mimic (the k is because it generally will be deployed on Kubernetes), basically what Mimik does is to imitate a service that listens to certain paths and methods, and connects these with upstream connections (that usually are Mimik instances too) forming a service mesh.
 
 ## Getting started
 
